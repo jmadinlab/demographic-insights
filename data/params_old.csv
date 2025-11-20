@@ -1,0 +1,29 @@
+species,name,growth_form,rec_juv,juv_adu,rec,juv,adu,paper,maturity,paper2
+Acropora cervicornis,Acropora cervicornis,Arborescent,100,1000,50,550,1500,Mercado-Molina et al. 2015,1600,
+Acropora cervicornis 2,Acropora cervicornis,Arborescent,100,1000,50,550,1500,Mercado-Molina et al. 2015,1600,
+Acropora cf. digitifera,Acropora cf. digitifera,Digitate,150,700,75,425,1050,Madin et al. 2023,80,Alvarez-Noriega et al. 2016
+Acropora cytherea,Acropora cytherea,Tabular,500,2000,250,1250,3000,Madin et al. 2023,2000,Alvarez-Noriega et al. 2016
+Acropora humilis,Acropora humilis,Digitate,150,700,75,425,1050,Madin et al. 2023,80,Alvarez-Noriega et al. 2016
+Acropora hyacinthus,Acropora hyacinthus,Tabular,500,2000,250,1250,3000,Madin et al. 2023,500,Alvarez-Noriega et al. 2016
+Acropora intermedia,Acropora intermedia,Arborescent,150,700,75,425,1050,Madin et al. 2023,1000,Alvarez-Noriega et al. 2016
+Acropora millepora,Acropora millepora,Corymbose,150,700,75,425,1050,Madin et al. 2023,80,Alvarez-Noriega et al. 2016
+Acropora nasuta,Acropora nasuta,Corymbose,150,700,75,425,1050,Madin et al. 2023,80,Alvarez-Noriega et al. 2016
+Acropora robusta,Acropora robusta,Arborescent,150,700,75,425,1050,Madin et al. 2023,500,Alvarez-Noriega et al. 2016
+Acropora spathulata,Acropora spathulata,Corymbose,150,700,75,425,1050,Madin et al. 2023,80,Alvarez-Noriega et al. 2016
+Agaricia agaricites,Agaricia agaricites,Laminar,20,100,10,60,150,Hughes & Tanner 2000,120,
+Agaricia agaricites 2,Agaricia agaricites,Laminar,20,100,10,60,150,Hughes & Tanner 2000,120,
+Goniastrea pectinata,Goniastrea pectinata,Massive,20,200,10,110,300,Madin et al. 2023,40,Alvarez-Noriega et al. 2016
+Goniastrea retiformis,Goniastrea retiformis,Massive,20,200,10,110,300,Madin et al. 2023,50,Alvarez-Noriega et al. 2016
+Helioseris cucullata,Helioseris cucullata,Laminar,20,100,10,60,150,Hughes & Tanner 2000,150,Unknown
+Helioseris cucullata 2,Helioseris cucullata,Laminar,20,100,10,60,150,Hughes & Tanner 2000,150,Unknown
+Helioseris cucullata 3,Helioseris cucullata,Laminar,20,100,10,60,150,Hughes & Tanner 2000,150,Unknown
+Montastraea annularis,Orbicella annularis,Massive,50,200,25,125,300,Hughes & Tanner 2000,83,
+Montastraea annularis 2,Orbicella annularis,Massive,50,200,25,125,300,Hughes & Tanner 2000,83,
+Montastraea annularis 3,Orbicella annularis,Massive,50,200,25,125,300,Hernandez-Pacheco et al. 2011,83,
+Montastraea annularis 4,Orbicella annularis,Massive,50,200,25,125,300,Hernandez-Pacheco et al. 2011,83,
+Orbicella annularis,Orbicella annularis,Massive,50,150,25,100,225,Soto-Santiago et al. 2017,83,
+Orbicella annularis 2,Orbicella annularis,Massive,50,150,25,100,225,Soto-Santiago et al. 2017,83,
+Orbicella annularis 3,Orbicella annularis,Massive,50,150,25,100,225,Soto-Santiago et al. 2017,83,
+Orbicella annularis 4,Orbicella annularis,Massive,50,150,25,100,225,Soto-Santiago et al. 2017,83,
+Porites astreoides,Porites astreoides,Massive,50,150,25,100,225,Soto-Santiago et al. 2017,250,"CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites astreoides 2,Porites astreoides,Massive,50,150,25,100,225,Soto-Santiago et al. 2017,250,"CHORNESKY, E. A., & PETERS, E. C. (1987)"

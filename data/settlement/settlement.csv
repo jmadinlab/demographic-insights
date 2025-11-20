@@ -1,0 +1,82 @@
+﻿location,region,species,year,density,substrate,per_m2,reference
+Moorea,Pacific,Pocilopora spp.,2008,4,Settlement tile,177.78,Bramanti et al. 2016
+Moorea,Pacific,Pocilopora spp.,2009,3,Settlement tile,133.33,Bramanti et al. 2016
+Moorea,Pacific,Pocilopora spp.,2010,4,Settlement tile,177.78,Bramanti et al. 2016
+Moorea,Pacific,Pocilopora spp.,2011,6.7,Settlement tile,297.78,Bramanti et al. 2016
+Moorea,Pacific,Pocilopora spp.,2012,8.2,Settlement tile,364.44,Bramanti et al. 2016
+Moorea,Pacific,Pocilopora spp.,2013,4.5,Settlement tile,200,Bramanti et al. 2016
+Moorea,Pacific,Pocilopora spp.,2014,0.67,Settlement tile,29.78,Bramanti et al. 2016
+Moorea,Pacific,Acropora spp.,2008,4.5,Settlement tile,200,Bramanti et al. 2016
+Moorea,Pacific,Acropora spp.,2009,4,Settlement tile,177.78,Bramanti et al. 2016
+Moorea,Pacific,Acropora spp.,2010,2,Settlement tile,88.89,Bramanti et al. 2016
+Moorea,Pacific,Acropora spp.,2011,2,Settlement tile,88.89,Bramanti et al. 2016
+Moorea,Pacific,Acropora spp.,2012,10.65,Settlement tile,473.33,Bramanti et al. 2016
+Moorea,Pacific,Acropora spp.,2013,3,Settlement tile,133.33,Bramanti et al. 2016
+Moorea,Pacific,Acropora spp.,2014,0.27,Settlement tile,12,Bramanti et al. 2016
+Moorea,Pacific,Porites spp.,2015,15.44,Natural reef,0.62,Schmitt et al. 2017
+Moorea,Pacific,Pocilopora spp.,2015,48,Natural reef,1.92,Schmitt et al. 2017
+Moorea,Pacific,Acropora spp.,2015,8.8,Natural reef,0.35,Schmitt et al. 2017
+Moorea,Pacific,Acropora spp.,2014,3.8,Natural reef,0.15,Schmitt et al. 2017
+Moorea,Pacific,Pocilopora spp.,2014,65.2,Natural reef,2.61,Schmitt et al. 2017
+Moorea,Pacific,Porites spp.,2014,13.04,Natural reef,0.52,Schmitt et al. 2017
+Moorea,Pacific,Acropora spp.,2013,10.6,Natural reef,0.42,Schmitt et al. 2017
+Moorea,Pacific,Pocilopora spp.,2013,283.55,Natural reef,11.34,Schmitt et al. 2017
+Moorea,Pacific,Porites spp.,2013,50.28,Natural reef,2.01,Schmitt et al. 2017
+Moorea,Pacific,Acropora spp.,2012,8.16,Natural reef,0.33,Schmitt et al. 2017
+Moorea,Pacific,Pocilopora spp.,2012,499.6,Natural reef,19.98,Schmitt et al. 2017
+Moorea,Pacific,Porites spp.,2012,10.52,Natural reef,0.42,Schmitt et al. 2017
+Moorea,Pacific,Acropora spp.,2011,5.72,Natural reef,0.23,Schmitt et al. 2017
+Moorea,Pacific,Pocilopora spp.,2011,262.6,Natural reef,10.5,Schmitt et al. 2017
+Moorea,Pacific,Porites spp.,2011,2.04,Natural reef,0.08,Schmitt et al. 2017
+Virgin Islands,Caribbean,Siderastreidae,2009,1.173333,Settlement tile,52.15,Edmunds 2022
+Virgin Islands,Caribbean,Faviidae,2009,0.133333,Settlement tile,5.93,Edmunds 2022
+Virgin Islands,Caribbean,Agaricidae,2009,0.786667,Settlement tile,34.96,Edmunds 2022
+Virgin Islands,Caribbean,Poritidae,2009,1.64,Settlement tile,72.89,Edmunds 2022
+Virgin Islands,Caribbean,Acroporidae,2009,0,Settlement tile,0,Edmunds 2022
+Virgin Islands,Caribbean,Other,2009,1.733333,Settlement tile,77.04,Edmunds 2022
+Virgin Islands,Caribbean,Astrangia,2009,0,Settlement tile,0,Edmunds 2022
+Virgin Islands,Caribbean,Siderastreidae,2010,1.72,Settlement tile,76.44,Edmunds 2022
+Virgin Islands,Caribbean,Faviidae,2010,0.186667,Settlement tile,8.3,Edmunds 2022
+Virgin Islands,Caribbean,Agaricidae,2010,0.32,Settlement tile,14.22,Edmunds 2022
+Virgin Islands,Caribbean,Poritidae,2010,1.36,Settlement tile,60.44,Edmunds 2022
+Virgin Islands,Caribbean,Acroporidae,2010,0,Settlement tile,0,Edmunds 2022
+Virgin Islands,Caribbean,Other,2010,0.92,Settlement tile,40.89,Edmunds 2022
+Virgin Islands,Caribbean,Astrangia,2010,0,Settlement tile,0,Edmunds 2022
+Virgin Islands,Caribbean,Siderastreidae,2011,0.689189,Settlement tile,30.63,Edmunds 2022
+Virgin Islands,Caribbean,Faviidae,2011,0.067568,Settlement tile,3,Edmunds 2022
+Virgin Islands,Caribbean,Agaricidae,2011,0.486486,Settlement tile,21.62,Edmunds 2022
+Virgin Islands,Caribbean,Poritidae,2011,1.027027,Settlement tile,45.65,Edmunds 2022
+Virgin Islands,Caribbean,Acroporidae,2011,0,Settlement tile,0,Edmunds 2022
+Virgin Islands,Caribbean,Other,2011,0.581081,Settlement tile,25.83,Edmunds 2022
+Virgin Islands,Caribbean,Astrangia,2011,0,Settlement tile,0,Edmunds 2022
+"O‘ahu, Hawai‘i",Pacific,Montipora capitata,1978,0,Natural reef,0,Polacheck (1978)
+"Maui, Hawai‘i",Pacific,Montipora capitata,2002,4.5,Natural reef,4.5,Brown (2004)
+"Moloka‘i, Hawai‘i",Pacific,Montipora capitata,2002,1.4,Natural reef,1.4,Brown et al. (2005)
+"Maui, Hawai‘i",Pacific,Montipora flabellata,2002,0.3,Natural reef,0.3,Brown (2004)
+"Moloka‘i, Hawai‘i",Pacific,Montipora flabellata,2002,0.1,Natural reef,0.1,Brown et al. (2005)
+Great Barrier Reef,Pacific,Montipora foliosa,1937,0.3,Natural reef,0.3,Connell (1973)
+Great Barrier Reef,Pacific,Montipora hispida,1937,0.3,Natural reef,0.3,Connell (1973)
+"Maui, Hawai‘i",Pacific,Montipora patula,2002,1,Natural reef,1,Brown (2004)
+"Moloka‘i, Hawai‘i",Pacific,Montipora patula,2002,0.5,Natural reef,0.5,Brown et al. (2005)
+Maldives,Indian,Montipora spp.,1998,0.4,Natural reef,0.4,McClanahan (2000)
+Great Barrier Reef,Pacific,Pocillopora damicornis,1937,0.7,Natural reef,0.7,Connell (1973)
+"Moloka‘i, Hawai‘i",Pacific,Pocillopora damicornis,2002,0.2,Natural reef,0.2,Brown et al. (2005)
+"O‘ahu, Hawai‘i",Pacific,Pocillopora meandrina,1978,0.2,Natural reef,0.2,Polacheck (1978)
+"Maui, Hawai‘i",Pacific,Pocillopora meandrina,2002,1,Natural reef,1,Brown (2004)
+"Moloka‘i, Hawai‘i",Pacific,Pocillopora meandrina,2002,0.2,Natural reef,0.2,Brown et al. (2005)
+Maldives,Indian,Pocillopora spp.,1998,0.1,Natural reef,0.1,McClanahan (2000)
+Great Barrier Reef,Pacific,Porites annae,2002,0.7,Natural reef,0.7,Brown et al. (2005)
+Bermuda,Caribbean,Porites astreoides,1989,12.1,Natural reef,12.1,Smith (1992)
+Florida,Pacific,Porites astreoides,1998,1.3,Natural reef,1.3,Miller et al. (2000)
+"O‘ahu, Hawai‘i",Pacific,Porites compressa,1978,0,Natural reef,0,Polacheck (1978)
+"Maui, Hawai‘i",Pacific,Porites compressa,2002,1.7,Natural reef,1.7,Brown (2004)
+"Moloka‘i, Hawai‘i",Pacific,Porites compressa,2002,0.3,Natural reef,0.3,Brown et al. (2005)
+"Maui, Hawai‘i",Pacific,Porites lobata,2002,1.1,Natural reef,1.1,Brown (2004)
+"Moloka‘i, Hawai‘i",Pacific,Porites lobata,2002,0.3,Natural reef,0.3,Brown et al. (2005)
+Great Barrier Reef,Pacific,Porites lutea,1937,0.9,Natural reef,0.9,Connell (1973)
+Florida,Caribbean,Porites porites,1998,0.4,Natural reef,0.4,Miller et al. (2000)
+Maldives,Indian,Porites spp,1998,3.3,Natural reef,3.3,McClanahan (2000)
+"Maui, Puamana",Pacific,all species,2002,415,Settlement tile,415,Brown (2004)
+"Maui, Olowalu",Pacific,all species,2002,122,Settlement tile,122,Brown (2004)
+"Maui, Honolua Bay",Pacific,all species,2002,41,Settlement tile,41,Brown (2004)
+Hawai'i,Pacific,all species,2000,24,Settlement tile,24,Martin and Walsh (2014)
