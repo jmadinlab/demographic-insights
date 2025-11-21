@@ -632,6 +632,7 @@ ggplot(set, aes(x=per_m2, y=substrate)) +
 
 ggsave("figs/figure6.png", width = 6, height = 2)
 
+write.csv(params, "output/params_out.csv", row.names = FALSE)
 
 ```
 
