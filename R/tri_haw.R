@@ -1,18 +1,7 @@
-# TRIMODAL
+# TRIMODAL & HAWAII
+params <- read.csv("data/params.csv")
 
-#library load
-# library(stats)
-library(tidyverse)
-library(popbio)
-library(gridExtra)
-
-# optimization function for recruitment
-fnc <- function(x, mat,lam=1, i=1, j=ncol(mat)) {
-  mat[i, j] <- x
-  return((lam - lambda(mat))^2)
-}
-
-# Load Trimodal Data, Prep for loop
+# Load Trimodal Data
 gtri <- read.csv("data/trimodal/growth.csv")
 stri <- read.csv("data/trimodal/survival.csv")
 stri <- stri[!is.na(stri$surv),]
@@ -63,20 +52,9 @@ head(shaw)
 # Merge Hawaii and GBR data for growth and survival
 gall <- rbind(gtri, ghaw)
 sall <- rbind(stri, shaw)
-
-# Move on with analysis ---------------------------------------------------
 spp <- unique(sort(gall$species))
 nspp <- length(spp)
 nspp
-
-# read params with assumed HA taxa params
-params <- read.csv("data/params.csv")
-
-# Calculate size mid points
-params$rec <- params$rec_juv / 2
-params$juv <- (params$rec_juv + params$juv_adu) / 2
-params$adu <- params$juv_adu + (params$juv_adu - params$juv)
-head(params)
 
 ### FECUNDITY TRIMODAL
 ftri <- read.csv("data/trimodal/fecundity.csv")
@@ -85,77 +63,72 @@ pp <- pp[c("species", "juv_adu")]
 
 ftri <- merge(ftri, pp)
 
-tail(ftri)
-
 ggplot(ftri, aes(x=area_cm2, y=reproductive)) +
   geom_jitter(height=0.02, width=0.05, color="grey") +
   geom_smooth(method="glm",method.args=list(family="binomial")) +
   scale_x_log10() +
   geom_hline(yintercept=0.75, lty=2) +
-  facet_wrap(~species) +
+  facet_wrap(~species, ncol=3) +
   ylim(c(0, 1))  +
+  labs(x="Area (cm^2)", y="Probability of being reproductive") +
   geom_vline(data = . %>% group_by(species) %>% summarise(vl=mean(juv_adu)), 
              aes(xintercept=vl), lty=2)
 
-ggsave("figs/figureS1-trifecund.png", width = 8, height = 2.5)
+ggsave("figs/figureS1-trifecund.png", width = 8, height = 5)
 
-# LOOP
-plot_list <- list() 
-store <- list()
+### ALL SURZVIVAL
 
-for (i in spp) {
+temp <- left_join(sall, params[c("species", "rec_juv", "juv_adu")], by = "species")
+ggplot(temp, aes(y = surv, x = area_cm2)) +
+  geom_jitter(height=0.05, color="grey") +
+  geom_smooth(se = FALSE) +
+  scale_x_log10() +
+  geom_vline(aes(xintercept=rec_juv), linetype=1) +
+  geom_vline(aes(xintercept=juv_adu), linetype=2) +
+  labs(x="Area (cm^2)", y="Probability of survival") +
+  facet_wrap(~species, ncol=3) +
+  theme(plot.title = element_text(size = 10))
 
-  mat <- matrix(0, 3, 3)
+ggsave("figs/figureS2-allsurv.png", width = 8, height = 7)
 
-  gdat <- gall[gall$species == i,]
-  sdat <- sall[sall$species == i,]
+# NORMAL RECRUITMENT
 
-  rec_juv <- params$rec_juv[params$species==i]
-  juv_adu <- params$juv_adu[params$species==i]
+spp <- unique(sort(gall$species))
 
-  ###
-  plot_list[[i]] <- ggplot(sdat, aes(y = surv, x = area_cm2)) +
-    geom_jitter(height=0.05, color="grey") +
-    geom_smooth(se = FALSE) +
-    scale_x_log10() +
-    geom_vline(xintercept=rec_juv, linetype=1) +
-    geom_vline(xintercept=juv_adu, linetype=2) +
-    ggtitle(i, ) + 
-    theme(plot.title = element_text(size = 10))
-  ###  
-  
+store_norm <- lapply(setNames(spp, spp), matfnc)
+length(store_norm)
 
-  r_s <- mean(sdat$surv[sdat$area_cm2 < rec_juv])
-  
-  mat[1, 1] <- nrow(gdat[gdat$area_cm2 < rec_juv & gdat$area_cm2_next < rec_juv,]) / nrow(gdat[gdat$area_cm2 < rec_juv,]) * r_s
-  mat[2, 1] <- nrow(gdat[gdat$area_cm2 < rec_juv & gdat$area_cm2_next >= rec_juv & gdat$area_cm2_next < juv_adu,]) / nrow(gdat[gdat$area_cm2 < rec_juv,]) * r_s
-  mat[3, 1] <- nrow(gdat[gdat$area_cm2 < rec_juv & gdat$area_cm2_next >= juv_adu,]) / nrow(gdat[gdat$area_cm2 < rec_juv,]) * r_s
-  
-  j_s <- mean(sdat$surv[sdat$area_cm2 >= rec_juv & sdat$area_cm2 < juv_adu])
-  
-  mat[1, 2] <- nrow(gdat[gdat$area_cm2 >= rec_juv & gdat$area_cm2 < juv_adu & gdat$area_cm2_next < rec_juv,]) / nrow(gdat[gdat$area_cm2 >= rec_juv & gdat$area_cm2 < juv_adu,]) * j_s
-  mat[2, 2] <- nrow(gdat[gdat$area_cm2 >= rec_juv & gdat$area_cm2 < juv_adu & gdat$area_cm2_next >= rec_juv & gdat$area_cm2_next < juv_adu,]) / nrow(gdat[gdat$area_cm2 >= rec_juv & gdat$area_cm2 < juv_adu,]) * j_s
-  mat[3, 2] <- nrow(gdat[gdat$area_cm2 >= rec_juv & gdat$area_cm2 < juv_adu & gdat$area_cm2_next >= juv_adu,]) / nrow(gdat[gdat$area_cm2 >= rec_juv & gdat$area_cm2 < juv_adu,]) * j_s
-  
-  a_s <- mean(sdat$surv[sdat$area_cm2 >= juv_adu])
-  
-  mat[1, 3] <- nrow(gdat[gdat$area_cm2 >= juv_adu & gdat$area_cm2_next < rec_juv,]) / nrow(gdat[gdat$area_cm2 >= juv_adu,]) * a_s
-  mat[2, 3] <- nrow(gdat[gdat$area_cm2 >= juv_adu & gdat$area_cm2_next >= rec_juv & gdat$area_cm2_next < juv_adu,]) / nrow(gdat[gdat$area_cm2 >= juv_adu,]) * a_s
-  mat[3, 3] <- nrow(gdat[gdat$area_cm2 >= juv_adu & gdat$area_cm2_next >= juv_adu,]) / nrow(gdat[gdat$area_cm2 >= juv_adu,]) * a_s
-  
-  print(lambda(mat))
-  
-  opt <- optimise(f=fnc, interval=c(0, 10000), mat=mat, maximum = FALSE)
-  mat[1, ncol(mat)] <- opt$minimum
-  print(lambda(mat))
-  
-  store[[i]] <- mat
+params$rec_juv <- 100 # pi * (2.5^2) # 5 cm diameter coral as per reviewer
+store_100 <- lapply(setNames(spp, spp), matfnc)
+names(store_100) <- paste0(names(store_100), "_100")
 
-}
+params$rec_juv <- 50 # pi * (2.5^2) # 5 cm diameter coral as per reviewer
+store_50 <- lapply(setNames(spp, spp), matfnc)
+names(store_50) <- paste0(names(store_50), "_50")
 
-gg <- grid.arrange(grobs=plot_list, ncol=3)
+params$rec_juv <- 20 # pi * (2.5^2) # 5 cm diameter coral as per reviewer
+store_20 <- lapply(setNames(spp, spp), matfnc)
+names(store_20) <- paste0(names(store_20), "_20")
 
-ggsave("figs/figureS2-allsurv.png", gg, width = 8, height = 7)
+params$rec_juv <- 10 # pi * (2.5^2) # 5 cm diameter coral as per reviewer
+store_10 <- lapply(setNames(spp, spp), matfnc)
+names(store_10) <- paste0(names(store_10), "_10")
 
-save(store, file="output/mats_tri_haw.RData")
+params$rec_juv <- 5 # pi * (2.5^2) # 5 cm diameter coral as per reviewer
+store_5 <- lapply(setNames(spp, spp), matfnc)
+names(store_5) <- paste0(names(store_5), "_5")
 
+
+
+# 5 cm RECRUITMRNT
+# gall <- gall[!(gall$species %in% c("Acropora cytherea", "Acropora humilis", "Acropora hyacinthus", "Acropora intermedia", "Acropora millepora", "Acropora nasuta", "Acropora robusta", "Acropora spathulata")),]
+# sall <- sall[!(sall$species %in% c("Acropora cytherea", "Acropora humilis", "Acropora hyacinthus", "Acropora intermedia", "Acropora millepora", "Acropora nasuta", "Acropora robusta", "Acropora spathulata")),]
+
+# spp <- unique(sort(gall$species))
+# length(spp)
+# params$rec_juv <- 20 # pi * (2.5^2) # 5 cm diameter coral as per reviewer
+# 
+# store_5cm <- lapply(setNames(spp, spp), matfnc)
+# length(store_5cm)
+# 
+# names(store_5cm) <- paste0(names(store_5cm), "_5cm")

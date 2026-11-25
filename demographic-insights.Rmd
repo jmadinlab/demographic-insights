@@ -5,41 +5,19 @@ output:
 # Demographic insights for restoring populations
 
 ```{r}
-library(tidyverse)
-library(popbio)
-library(gridExtra)
-library(patchwork)
-library(ggsci)
-
-# least squares optimization functions for additive and multiplicative approaches
-
-mfnc <- function(mat, x, lam=1, i=1, j=ncol(mat)) {
-  mat[i, j] <- x
-  (lam - lambda(mat))^2
-}
-
-afnc <- function(mat, x, stg=1, lam=1.1) {
-  ss <- stable.stage(mat) * 1
-  ss[stg] <- ss[stg] + x
-  (lam - sum(mat %*% ss))^2
-}
-
-mfnc_prop <- function(mat, x, lam=1, i=1, j=ncol(mat), prop=1) {
-  mat[i, j] <- x * prop + mat[i, j] * (1 - prop)
-  (lam - lambda(mat))^2
-}
-
-# Process the population matrices
+source("R/mat-func.R")
 source("R/tri_haw.R")
 source("R/comadre.R")
+
+mats <- c(store_com, store_norm, store_20, store_10, store_5)
+length(mats)
 
 ```
 
 # MATRIX CALCULATIONS
 
 ```{r echo=FALSE}
-load(file="output/mats.RData") # Load the matrices
-params <- read.csv("data/params.csv") # Load the species parameters
+params <- read.csv("data/params_rec.csv") # Load the species parameters
 
 # Calculate species stage mid-point sizes in cm^2
 params$rec <- params$rec_juv / 2
@@ -50,101 +28,133 @@ params$adu <- params$juv_adu + (params$juv_adu - params$juv)
 astore <- data.frame()
 mstore <- data.frame()
 
-for (lam in c(1.01, 1.02, 1.05, 1.1)) { # Loop through 1, 2, 5 and 10% population increases
-  for (i in names(mats)) { # Loop through the population matrices
-    # Load species matrix
-    mat <- mats[[i]]
+# prelam <- 0.9
+for (prelam in c(0.9, 0.95, 1, 1.05, 1.1)) { # 
+  for (inc in c(1.01, 1.02, 1.05, 1.1)) { # Loop through 1, 2, 5 and 10% population increases
+    for (i in names(mats)) { # Loop through the population matrices
+      # Load species matrix
+      mat <- mats[[i]]
+      if (class(mat)[1]=="matrix") {
+        lam <- prelam * inc
     
-    # Some population metrics, note that lambda should be 1
-    lambda(mat)
-    stable.stage(mat)
-    reproductive.value(mat)
-
-    # Assigning from parameters for the population
-    area_vec <- params[params$species==i, c("rec", "juv", "adu")]
-    growth_form <- params$growth_form[params$species==i]
-    region <- params$region[params$species==i]
+        opt <- optimise(f=recfnc, interval=c(0, 10000), mat=mat, maximum = FALSE, lam=prelam)
+        mat[1, ncol(mat)] <- opt$minimum
     
-    # Combine GBR and Hawaii, call Pacific
-    if (region %in% c("GBR", "Hawaii")) {
-      region <- "Pacific"
+        # Some population metrics, note that lambda should be 1 (or prelam)
+        lambda(mat)
+        stable.stage(mat)
+        reproductive.value(mat)
+    
+        # Assigning from parameters for the population
+        area_vec <- params[params$species==i, c("rec", "juv", "adu")]
+        growth_form <- params$growth_form[params$species==i]
+        region <- params$region[params$species==i]
+        
+        # Combine GBR and Hawaii, call Pacific
+        if (region %in% c("GBR", "Hawaii")) {
+          region <- "Pacific"
+        }
+        
+        recsiz <- "Normal"
+        if (grepl("_100", i)) {
+          recsiz <- "100"
+        }
+        if (grepl("_50", i)) {
+          recsiz <- "50"
+        }
+        if (grepl("_20", i)) {
+          recsiz <- "20"
+        }
+        if (grepl("_10", i)) {
+          recsiz <- "10"
+        }
+        if (grepl("_5", i)) {
+          recsiz <- "5"
+        }
+              
+        # Calculate additions for stages (e.g., recruits) required to increase population by X%
+        arec <- optimise(f=afnc, interval=c(0, 1), mat=mat, stg=1, lam=lam)$minimum
+        ajuv <- optimise(f=afnc, interval=c(0, 1), mat=mat, stg=2, lam=lam)$minimum
+        aadu <- optimise(f=afnc, interval=c(0, 1), mat=mat, stg=3, lam=lam)$minimum
+        
+        aa <- stable.stage(mat) * area_vec # Coral area by stage
+        aa_sum <- sum(aa) # Total coral area based on mid point sizes
+        
+        # TESTS ONLY
+        # (nn_rec * area_vec$rec)
+        # (nn_juv * area_vec$juv) / aa_sum
+        # (nn_adu * area_vec$adu) / aa_sum
+        # (nn_rec * area_vec$rec) * aa[1] +
+        # (nn_juv * area_vec$juv) * aa[2] +
+        # (nn_adu * area_vec$adu) * aa[3]
+        # 
+        # stable.stage(mat) * area_vec * c(nn_rec, nn_juv, nn_adu)
+        
+        astore <- rbind(astore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Recruit", nn=1000 * arec, aa=100 * (arec * area_vec$rec) / aa_sum, growth_form=growth_form, region=region))
+        astore <- rbind(astore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Juvenile", nn=1000 * ajuv, aa=100 *(ajuv * area_vec$juv) / aa_sum, growth_form=growth_form, region=region))
+        astore <- rbind(astore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Adult", nn=1000 * aadu, aa=100 *(aadu * area_vec$adu) / aa_sum, growth_form=growth_form, region=region))
+      
+        # Elasticity for ground truthing. 
+        ele <- elasticity(mat)
+    
+        # RECRUITS
+        rec_rec_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=1, j=1)$minimum
+        rec_juv_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=2, j=1)$minimum
+        rec_adu_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=3, j=1)$minimum
+    
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Recruit survival", stage_type="survive", current=mat[1,1], required=rec_rec_opt, poss=if(rec_rec_opt + sum(mat[c(2, 3),1]) < 1) {TRUE} else {FALSE}, delta=rec_rec_opt / mat[1,1], ele=ele[1,1], growth_form=growth_form, region=region))
+    
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Recruit to juvenile growth", stage_type="grow", current=mat[2,1], required=rec_juv_opt, poss=if(rec_juv_opt + sum(mat[c(1, 3),1]) < 1) {TRUE} else {FALSE}, delta=rec_juv_opt / mat[2,1], ele=ele[2,1], growth_form=growth_form, region=region)  )
+    
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Recruit to adult growth", stage_type="grow", current=mat[3,1], required=rec_adu_opt, poss=if(rec_adu_opt + sum(mat[c(1, 2),1]) < 1) {TRUE} else {FALSE}, delta=rec_adu_opt / mat[3,1], ele=ele[3,1], growth_form=growth_form, region=region)  )
+    
+        # JUVENILES
+        juv_rec_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=1, j=2)$minimum
+        juv_juv_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=2, j=2)$minimum
+        juv_adu_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=3, j=2)$minimum
+    
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Juvenile to recruit shrinkage", stage_type="shrink", current=mat[1,2], required=juv_rec_opt, poss=if(juv_rec_opt + sum(mat[c(2, 3),2]) < 1) {TRUE} else {FALSE}, delta=juv_rec_opt / mat[1,2], ele=ele[1,2], growth_form=growth_form, region=region))  
+        
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Juvenile survival", stage_type="survive", current=mat[2,2], required=juv_juv_opt, poss=if(juv_juv_opt + sum(mat[c(1, 3),2]) < 1) {TRUE} else {FALSE}, delta=juv_juv_opt / mat[2,2], ele=ele[2,2], growth_form=growth_form, region=region)  )
+    
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Juvenile to adult growth", stage_type="grow", current=mat[3,2], required=juv_adu_opt, poss=if(juv_adu_opt + sum(mat[c(1, 2),2]) < 1) {TRUE} else {FALSE}, delta=juv_adu_opt / mat[3,2], ele=ele[3,2], growth_form=growth_form, region=region)  )
+    
+        # ADULTS
+        adu_rec_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=1, j=3)$minimum
+        adu_juv_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=2, j=3)$minimum
+        adu_adu_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=3, j=3)$minimum
+        
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Recruitment", current=mat[1,3], stage_type="recruit", required=adu_rec_opt, poss=TRUE, delta=adu_rec_opt / mat[1,3], ele=ele[1,3], growth_form=growth_form, region=region))
+      
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Adult to Juvenile shrinkage", stage_type="shrink", current=mat[2,3], required=adu_juv_opt, poss=if(adu_juv_opt + sum(mat[3,3]) < 1) {TRUE} else {FALSE}, delta=adu_juv_opt / mat[2,3], ele=ele[2,3], growth_form=growth_form, region=region))
+      
+        mstore <- rbind(mstore, data.frame(species=i, recsiz=recsiz, prelam=prelam, lam=lam, inc=inc, stage="Adult survival", stage_type="survive", current=mat[3,3], required=adu_adu_opt, poss=if(adu_adu_opt + sum(mat[2,3]) < 1) {TRUE} else {FALSE}, delta=adu_adu_opt / mat[3,3], ele=ele[3,3], growth_form=growth_form, region=region)  )
+      }
     }
-    
-    # Calculate additions for stages (e.g., recruits) required to increase population by X%
-    arec <- optimise(f=afnc, interval=c(0, 1), mat=mat, stg=1, lam=lam)$minimum
-    ajuv <- optimise(f=afnc, interval=c(0, 1), mat=mat, stg=2, lam=lam)$minimum
-    aadu <- optimise(f=afnc, interval=c(0, 1), mat=mat, stg=3, lam=lam)$minimum
-    
-    aa <- stable.stage(mat) * area_vec # Coral area by stage
-    aa_sum <- sum(aa) # Total coral area based on mid point sizes
-    
-    # TESTS ONLY
-    # (nn_rec * area_vec$rec)
-    # (nn_juv * area_vec$juv) / aa_sum
-    # (nn_adu * area_vec$adu) / aa_sum
-    # (nn_rec * area_vec$rec) * aa[1] +
-    # (nn_juv * area_vec$juv) * aa[2] +
-    # (nn_adu * area_vec$adu) * aa[3]
-    # 
-    # stable.stage(mat) * area_vec * c(nn_rec, nn_juv, nn_adu)
-    
-    astore <- rbind(astore, data.frame(species=i, lam=lam, stage="Recruit", nn=1000 * arec, aa=100 * (arec * area_vec$rec) / aa_sum, growth_form=growth_form, region=region))
-    astore <- rbind(astore, data.frame(species=i, lam=lam, stage="Juvenile", nn=1000 * ajuv, aa=100 *(ajuv * area_vec$juv) / aa_sum, growth_form=growth_form, region=region))
-    astore <- rbind(astore, data.frame(species=i, lam=lam, stage="Adult", nn=1000 * aadu, aa=100 *(aadu * area_vec$adu) / aa_sum, growth_form=growth_form, region=region))
-  
-    # Elasticity for ground truthing. 
-    ele <- elasticity(mat)
-
-    # RECRUITS
-    rec_rec_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=1, j=1)$minimum
-    rec_juv_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=2, j=1)$minimum
-    rec_adu_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=3, j=1)$minimum
-
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Recruit survival", stage_type="survive", current=mat[1,1], required=rec_rec_opt, poss=if(rec_rec_opt + sum(mat[c(2, 3),1]) < 1) {TRUE} else {FALSE}, delta=rec_rec_opt / mat[1,1], ele=ele[1,1], growth_form=growth_form, region=region))
-
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Recruit to juvenile growth", stage_type="grow", current=mat[2,1], required=rec_juv_opt, poss=if(rec_juv_opt + sum(mat[c(1, 3),1]) < 1) {TRUE} else {FALSE}, delta=rec_juv_opt / mat[2,1], ele=ele[2,1], growth_form=growth_form, region=region)  )
-
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Recruit to adult growth", stage_type="grow", current=mat[3,1], required=rec_adu_opt, poss=if(rec_adu_opt + sum(mat[c(1, 2),1]) < 1) {TRUE} else {FALSE}, delta=rec_adu_opt / mat[3,1], ele=ele[3,1], growth_form=growth_form, region=region)  )
-
-    # JUVENILES
-    juv_rec_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=1, j=2)$minimum
-    juv_juv_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=2, j=2)$minimum
-    juv_adu_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=3, j=2)$minimum
-
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Juvenile to recruit shrinkage", stage_type="shrink", current=mat[1,2], required=juv_rec_opt, poss=if(juv_rec_opt + sum(mat[c(2, 3),2]) < 1) {TRUE} else {FALSE}, delta=juv_rec_opt / mat[1,2], ele=ele[1,2], growth_form=growth_form, region=region))  
-    
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Juvenile survival", stage_type="survive", current=mat[2,2], required=juv_juv_opt, poss=if(juv_juv_opt + sum(mat[c(1, 3),2]) < 1) {TRUE} else {FALSE}, delta=juv_juv_opt / mat[2,2], ele=ele[2,2], growth_form=growth_form, region=region)  )
-
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Juvenile to adult growth", stage_type="grow", current=mat[3,2], required=juv_adu_opt, poss=if(juv_adu_opt + sum(mat[c(1, 2),2]) < 1) {TRUE} else {FALSE}, delta=juv_adu_opt / mat[3,2], ele=ele[3,2], growth_form=growth_form, region=region)  )
-
-    # ADULTS
-    adu_rec_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=1, j=3)$minimum
-    adu_juv_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=2, j=3)$minimum
-    adu_adu_opt <- optimise(f=mfnc, interval=c(0, 10000), mat=mat, lam=lam, i=3, j=3)$minimum
-    
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Recruitment", current=mat[1,3], stage_type="recruit", required=adu_rec_opt, poss=TRUE, delta=adu_rec_opt / mat[1,3], ele=ele[1,3], growth_form=growth_form, region=region))
-  
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Adult to Juvenile shrinkage", stage_type="shrink", current=mat[2,3], required=adu_juv_opt, poss=if(adu_juv_opt + sum(mat[3,3]) < 1) {TRUE} else {FALSE}, delta=adu_juv_opt / mat[2,3], ele=ele[2,3], growth_form=growth_form, region=region))
-  
-    mstore <- rbind(mstore, data.frame(species=i, lam=lam, stage="Adult survival", stage_type="survive", current=mat[3,3], required=adu_adu_opt, poss=if(adu_adu_opt + sum(mat[2,3]) < 1) {TRUE} else {FALSE}, delta=adu_adu_opt / mat[3,3], ele=ele[3,3], growth_form=growth_form, region=region)  )
-  
   }
 }
 
 mstore$delta[mstore$delta == "Inf"] <- NA
+mstore$species <- sub("_20", "", mstore$species)
+astore$species <- sub("_20", "", astore$species)
+mstore$species <- sub("_10", "", mstore$species)
+astore$species <- sub("_10", "", astore$species)
+mstore$species <- sub("_5", "", mstore$species)
+astore$species <- sub("_5", "", astore$species)
 
 mstore$stage <- factor(mstore$stage, levels = rev(c("Recruit survival", "Juvenile survival", "Adult survival", "Recruit to juvenile growth", "Juvenile to adult growth", "Recruit to adult growth", "Juvenile to recruit shrinkage", "Adult to Juvenile shrinkage", "Recruitment")), ordered = TRUE)
 mstore$growth_form <- factor(mstore$growth_form, levels = c("Massive", "Digitate", "Corymbose", "Laminar", "Tabular", "Arborescent"), ordered = TRUE)
+mstore$recsiz <- factor(mstore$recsiz, levels = c("Normal", "20", "10", "5"), ordered = TRUE)
 
 astore$stage_ord <- factor(astore$stage, levels = c("Recruit", "Juvenile", "Adult"), ordered = TRUE)
 astore$growth_form <- factor(astore$growth_form, levels = c("Massive", "Digitate", "Corymbose", "Laminar", "Tabular", "Arborescent"), ordered = TRUE)
+astore$recsiz <- factor(astore$recsiz, levels = c("Normal", "20", "10", "5"), ordered = TRUE)
 
-mstore_c <- mstore[!(mstore$stage %in% c("Juvenile to recruit shrinkage", "Adult to Juvenile shrinkage")),]
-mstore_c$stage_ord <- factor(mstore_c$stage, levels = rev(c("Recruit survival", "Juvenile survival", "Adult survival", "Recruit to juvenile growth", "Juvenile to adult growth", "Recruit to adult growth", "Recruitment")), ordered = TRUE)
+mstore_c <- mstore[!(mstore$stage %in% c("Juvenile to recruit shrinkage", "Adult to Juvenile shrinkage", "Recruit to adult growth")),]
+mstore_c$stage_ord <- factor(mstore_c$stage, levels = rev(c("Recruit survival", "Juvenile survival", "Adult survival", "Recruit to juvenile growth", "Juvenile to adult growth", "Recruitment")), ordered = TRUE)
 
-
-write.csv(mstore, "output/mstore.csv", row.names = FALSE)
-write.csv(astore, "output/astore.csv", row.names = FALSE)
+# write.csv(mstore, "output/mstore.csv", row.names = FALSE)
+# write.csv(astore, "output/astore.csv", row.names = FALSE)
 
 ```
 
@@ -176,12 +186,13 @@ sum(mat %*% (stable.stage(mat) * 1000 + c(0, 64.4, 0)))
 # Transition matrix summary
 
 ```{r echo=FALSE}
-ggplot(mstore[mstore$lam==1.05,], aes(y=stage, x=current, fill=stage_type)) +
+
+ggplot(mstore[mstore$prelam==1 & mstore$inc==1.05 & mstore$recsiz=="Normal",], aes(y=stage, x=current, fill=stage_type)) +
   geom_boxplot(outliers = FALSE) +
+  geom_jitter(alpha=0.2, height=0.1) +
   scale_x_log10(breaks=c(0.01, 0.1, 0.2, 0.5, 1, 10, 100), labels=c(0.01, 0.1, 0.2, 0.5, 1, 10, 100), minor_breaks=0) +
   coord_cartesian(xlim = c(0.01, 100)) +
   scale_fill_manual(values = c("#004D40", "#1E88E5", "#D81B60", "#FFC107")) +
-  geom_jitter(height = 0.2, alpha=0.2) +
   xlab("Probability \U00A6 Numbers (log10 axis)") +
   ylab("") +
   geom_vline(xintercept=1, color="black", lty=2) + theme_linedraw() + 
@@ -191,19 +202,20 @@ ggplot(mstore[mstore$lam==1.05,], aes(y=stage, x=current, fill=stage_type)) +
   labs(title="λ=1, all species")
 
 ggsave("figs/figure2.png", width = 8, height = 3)
+
 ```
+
 
 # Plots for multiplicative approach
 
-
 ```{r echo=FALSE}
-mstore_c[mstore_c$lam==1.05,] %>%
+mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05 & mstore_c$recsiz=="Normal",] %>%
   group_by(stage, poss) %>%
   summarise(n = n()) %>%
   mutate(freq = round(100 * n / sum(n))) %>%
   filter(poss == TRUE) 
 
-p1 <- ggplot(mstore_c[mstore_c$lam==1.05,], aes(y=stage, x=required, fill=stage_type)) +
+p1 <- ggplot(mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05 & mstore_c$recsiz=="Normal",], aes(y=stage, x=required, fill=stage_type)) +
   geom_boxplot(outliers = FALSE) +
   scale_x_log10(breaks=c(0.01, 0.1, 1, 10, 100), labels=c(0.01, 0.1, 1, 10, 100), minor_breaks=0) +
   coord_cartesian(xlim = c(0.001, 200)) +
@@ -218,29 +230,29 @@ p1 <- ggplot(mstore_c[mstore_c$lam==1.05,], aes(y=stage, x=required, fill=stage_
   theme(strip.background =element_rect(fill="white"), legend.position="none")+
   theme(strip.text = element_text(colour = 'black')) +
   annotate("text", x=0.1, y=1, label = "100%") +
-  annotate("text", x=10, y=2, label = "100%") +
-  annotate("text", x=10, y=3, label = "93%") +
-  annotate("text", x=10, y=4, label = "100%") +
-  annotate("text", x=10, y=5, label = "82%") +
-  annotate("text", x=10, y=6, label = "71%") +
-  annotate("text", x=10, y=7, label = "100%") +
+  # annotate("text", x=10, y=2, label = "100%") +
+  annotate("text", x=10, y=2, label = "86%") +
+  annotate("text", x=10, y=3, label = "100%") +
+  annotate("text", x=10, y=4, label = "86%") +
+  annotate("text", x=10, y=5, label = "68%") +
+  annotate("text", x=10, y=6, label = "97%") +
   labs(title="A")
 p1
 
-p2 <- ggplot(mstore_c[mstore_c$lam=="1.05" & mstore_c$poss,], aes(y=stage, x=delta, fill=stage_type)) +
+p2 <- ggplot(mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05 & mstore_c$poss & mstore_c$recsiz=="Normal",], aes(y=stage, x=delta, fill=stage_type)) +
   geom_boxplot(outliers = FALSE) +
   scale_x_log10(breaks=c(1, 1.5, 2, 4, 8), minor_breaks=0) +
   scale_fill_manual(values = c("#004D40", "#1E88E5", "#FFC107")) +
   coord_cartesian(xlim = c(1, 4)) +
   theme_linedraw() + 
   theme(axis.text.y=element_blank()) +
-  # geom_jitter(height = 0.1, alpha=0.3) +
+  geom_jitter(height = 0.1, alpha=0.3) +
   xlab("Cell multiplier (log axis)") +
   ylab("")  + guides(fill="none") +
   labs(title="B")
 p2 
 
-p3 <- ggplot(mstore_c[mstore_c$lam=="1.05" & mstore_c$poss,], aes(y=stage_ord, x=delta, fill=stage_type)) +
+p3 <- ggplot(mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05 & mstore_c$poss & mstore_c$recsiz=="Normal",], aes(y=stage_ord, x=delta, fill=stage_type)) +
   geom_boxplot(outliers = FALSE) +
   scale_x_log10(breaks=c(1, 2, 4, 8, 16), minor_breaks=0) +
   coord_cartesian(xlim = c(1, 20)) +
@@ -256,7 +268,7 @@ p3 <- ggplot(mstore_c[mstore_c$lam=="1.05" & mstore_c$poss,], aes(y=stage_ord, x
   facet_wrap(~growth_form, ncol=1)
 p3
 
-p4 <- ggplot(mstore_c[mstore_c$lam=="1.05" & mstore_c$poss,], aes(y=stage_ord, x=delta, fill=stage_type)) +
+p4 <- ggplot(mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05 & mstore_c$poss & mstore_c$recsiz=="Normal",], aes(y=stage_ord, x=delta, fill=stage_type)) +
   geom_boxplot(outliers = FALSE) +
   scale_x_log10(breaks=c(1, 2, 4, 8, 16), minor_breaks=0) +
   coord_cartesian(xlim = c(1, 20)) +
@@ -272,6 +284,7 @@ p4 <- ggplot(mstore_c[mstore_c$lam=="1.05" & mstore_c$poss,], aes(y=stage_ord, x
 p4
 
 p1 + p2 + p3 + p4 + plot_layout(ncol=4, axis_titles="collect_x")
+# p1 + p2 + plot_layout(ncol=2)
 
 ggsave("figs/figure3.png", width = 10, height = 6)
 
@@ -280,11 +293,11 @@ ggsave("figs/figure3.png", width = 10, height = 6)
 # Vital rates by growth form, supplemental 
 
 ```{r echo=FALSE}
-ggplot(mstore[mstore$lam==1.05,], aes(y=stage, x=current, fill=stage_type)) +
+ggplot(mstore[mstore_c$prelam==1 & mstore_c$inc==1.05 & mstore_c$recsiz=="Normal",], aes(y=stage, x=current, fill=stage_type)) +
   geom_boxplot(outliers = FALSE) +
   scale_x_sqrt(breaks=c(0, 0.1, 0.5, 1, 10, 20, 30, 40, 50), labels=c(0, 0.1, 0.5, 1, 10, 20, 30, 40, 50), minor_breaks=0) +
   coord_cartesian(xlim = c(0, 40)) +
-  scale_fill_jco() +
+  scale_fill_manual(values = c("#004D40", "#1E88E5", "#D81B60", "#FFC107")) +
   geom_jitter(height = 0.2, alpha=0.2) +
   xlab("Probability \U00A6 Numbers (sqrt axis)") +
   ylab("") +
@@ -303,7 +316,7 @@ ggsave("figs/figureS5-growth-forms.png", width = 6, height = 8)
 
 ```{r}
 
-ggplot(mstore_c[mstore_c$lam==1.05,], aes(y=stage_ord, x=ele, fill=stage_type)) +
+ggplot(mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05 & mstore_c$recsiz=="Normal",], aes(y=stage_ord, x=ele, fill=stage_type)) +
   geom_boxplot(outliers = FALSE) +
   scale_fill_manual(values = c("#004D40", "#1E88E5", "#FFC107")) +
   geom_jitter(height = 0.2, alpha=0.2) +
@@ -323,7 +336,7 @@ ggsave("figs/figureS4-elasticity.png", width = 8, height = 3)
 
 ```{r echo=FALSE}
 
-p1 <- ggplot(astore[astore$lam==1.05,], aes(y=stage, x=nn, group = interaction(growth_form, stage), fill=growth_form)) +
+p1 <- ggplot(astore[astore$prelam==1 & astore$inc==1.05 & astore$recsiz=="Normal",], aes(y=stage, x=nn, group = interaction(growth_form, stage), fill=growth_form)) +
   geom_boxplot(outliers = FALSE) +
   # geom_jitter(height = 0.1, alpha=0.3) +  
   geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
@@ -340,7 +353,7 @@ p1 <- ggplot(astore[astore$lam==1.05,], aes(y=stage, x=nn, group = interaction(g
   labs(title="A. Growth form scenarios (λ=1.05)")
 p1
 
-p2 <- ggplot(astore[astore$lam==1.05,], aes(y=stage, x=aa, group = interaction(growth_form, stage), fill=growth_form)) +
+p2 <- ggplot(astore[astore$prelam==1 & astore$inc==1.05 & astore$recsiz=="Normal",], aes(y=stage, x=aa, group = interaction(growth_form, stage), fill=growth_form)) +
   geom_boxplot(outliers = FALSE) +
   geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
   scale_x_log10(breaks=c(1, 2, 5, 10, 20, 50, 100), limits = c(1, 200), minor_breaks=0) +
@@ -354,7 +367,7 @@ p2 <- ggplot(astore[astore$lam==1.05,], aes(y=stage, x=aa, group = interaction(g
 p2
 
 
-p3 <- ggplot(astore[astore$lam==1.05,], aes(y=stage, x=nn, group = interaction(region, stage), fill=region)) +
+p3 <- ggplot(astore[astore$prelam==1 & astore$inc==1.05 & astore$recsiz=="Normal",], aes(y=stage, x=nn, group = interaction(region, stage), fill=region)) +
   geom_boxplot(outliers = FALSE) +
   # geom_jitter(height = 0.1, alpha=0.3) +  
   geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
@@ -371,7 +384,7 @@ p3 <- ggplot(astore[astore$lam==1.05,], aes(y=stage, x=nn, group = interaction(r
   labs(title="A. Regional scenarios (λ=1.05)")
 p3
 
-p4 <- ggplot(astore[astore$lam==1.05,], aes(y=stage, x=aa, group = interaction(region, stage), fill=region)) +
+p4 <- ggplot(astore[astore$prelam==1 & astore$inc==1.05 & astore$recsiz=="Normal",], aes(y=stage, x=aa, group = interaction(region, stage), fill=region)) +
   geom_boxplot(outliers = FALSE) +
   geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
   scale_x_log10(breaks=c(1, 2, 5, 10, 20, 50, 100), limits = c(1, 200), minor_breaks=0) +
@@ -387,7 +400,7 @@ p4
 
 # store_nn$dlam <- as.factor(store_nn$dlam)
 
-p5 <- ggplot(astore, aes(y=stage, x=nn, group = interaction(lam, stage), fill=as.factor(lam))) +
+p5 <- ggplot(astore[astore$prelam==1 & astore$recsiz=="Normal",], aes(y=stage, x=nn, group = interaction(lam, stage), fill=as.factor(lam))) +
   geom_boxplot(outliers = FALSE) +
   # geom_jitter(height = 0.1, alpha=0.3) +  
   geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
@@ -405,7 +418,7 @@ p5 <- ggplot(astore, aes(y=stage, x=nn, group = interaction(lam, stage), fill=as
 p5$labels$fill <- "Increase rate"
 p5
 
-p6 <- ggplot(astore, aes(y=stage, x=aa, group = interaction(lam, stage), fill=as.factor(lam))) +
+p6 <- ggplot(astore[astore$prelam==1 & astore$recsiz=="Normal",], aes(y=stage, x=aa, group = interaction(lam, stage), fill=as.factor(lam))) +
   geom_boxplot(outliers = FALSE) +
   geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
   scale_x_log10(breaks=c(1, 2, 5, 10, 20, 50, 100), limits = c(1, 200), minor_breaks=0) +
@@ -421,9 +434,128 @@ p1 + p2 + p3 + p4 + p5 + p6 + plot_layout(ncol=2)
 
 ggsave("figs/figure4.png", width = 8, height = 10)
 
+
 ```
 
-# SUMMARIES ralative to population sizes. 
+```{r}
+
+# REC COMPARE
+
+q1 <- ggplot(mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05,], aes(y=stage, x=current, group = interaction(recsiz, stage), fill=recsiz)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
+  scale_x_log10(breaks=c(0.01, 0.1, 0.2, 0.5, 1, 10, 100), labels=c(0.01, 0.1, 0.2, 0.5, 1, 10, 100), minor_breaks=0) +
+  coord_cartesian(xlim = c(0.01, 100)) +
+  scale_fill_jco(labels = c(
+      "Normal"   = "Normal",   # Append cm^2 to specific items
+      "20"    = "20 cm^2",
+      "10"    = "10 cm^2",
+      "5" = "5 cm^2"            # Leave unchanged if desired
+    ))+
+  ylab("")  + 
+  theme_linedraw() +
+  xlab("Probability \U00A6 Numbers (log10 axis)") +
+  theme(legend.position = "inside", legend.position.inside = c(0.75, 0.5)) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs(title="A", fill="Recruit-juvenile size")
+q1
+
+
+
+q2 <- ggplot(mstore_c[mstore_c$prelam==1 & mstore_c$inc==1.05,], aes(y=stage, x=delta, group = interaction(recsiz, stage), fill=recsiz)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
+  scale_x_log10(breaks=c(1, 1.5, 2, 4, 8), minor_breaks=0) +
+  scale_fill_jco()+
+  ylab("")  + 
+  xlab("")  + 
+  coord_cartesian(xlim = c(1, 4)) +
+  xlab("Cell multiplier (log axis)") +
+  theme_linedraw() +
+  theme(legend.position="none", axis.text.y=element_blank()) +
+  labs(title="B")
+q2
+
+q3 <- ggplot(astore[astore$prelam==1 & astore$inc==1.05,], aes(y=stage, x=nn, group = interaction(recsiz, stage), fill=recsiz)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
+  scale_x_log10(labels = ~ format(.x, scientific = FALSE)) +
+  # coord_cartesian(xlim = c(0.1, 1000)) +
+  scale_fill_jco()+
+  ylab("")  + 
+  theme_linedraw() +
+  xlab("Outplants per 1000 individuals") +
+  theme(legend.position="none") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  labs(title="C")
+q3
+
+q4 <- ggplot(astore[astore$prelam==1 & astore$inc==1.05,], aes(y=stage, x=aa, group = interaction(recsiz, stage), fill=recsiz)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_point(pch = 21, position = position_jitterdodge(jitter.width = 0.1)) +
+  scale_x_log10(breaks=c(1, 2, 5, 10, 20, 50, 100), limits = c(0.1, 200), minor_breaks=0) +
+  # xlab(expression("Outplant area per 100 m2")) +
+  scale_fill_jco()+
+  ylab("")  + 
+  xlab("")  + 
+  # geom_text(inherit.aes=FALSE, aes(x=1.2, y=3.3, label="B"), size=5) + 
+  xlab(expression("Outplant area per 100 m"^2*"")) +
+  theme_linedraw() +
+  theme(legend.position="none", axis.text.y=element_blank()) +
+  labs(title="D")
+q4
+
+q1 + q2 + q3 + q4 + plot_layout(ncol=2)
+
+ggsave("figs/figureSrec.png", width = 10, height = 8)
+
+
+```
+
+# Sensitivity to starting lambda (prelam)
+
+```{r echo=FALSE}
+
+p1 <- ggplot(mstore_c[mstore_c$prelam %in% c(0.9, 0.95, 1, 1.05, 1.1) & mstore_c$inc==1.05 & mstore_c$poss & mstore_c$stage != "Recruit to adult growth" & astore$recsiz=="Normal",], aes(y=stage, x=delta, fill=as.character(prelam), group = interaction(prelam, stage))) +
+  geom_boxplot(outliers = FALSE) +
+  scale_x_log10(breaks=c(1, 1.5, 2, 4, 8), minor_breaks=0) +
+  scale_fill_manual(values = c("#004D40", "#1E88E5", "#FFC107")) +
+  coord_cartesian(xlim = c(1, 4)) +
+  scale_fill_jco()+
+  theme_linedraw() + 
+  theme(legend.position="none") +
+  # theme(axis.text.y=element_blank()) +
+  # geom_jitter(height = 0.1, alpha=0.3) +
+  xlab("Cell multiplier (log axis)") +
+  ylab("")  + 
+  labs(title="A. Structural approach")
+p1
+
+p2 <- ggplot(astore[astore$prelam %in% c(0.9, 0.95, 1, 1.05, 1.1) & astore$inc==1.05 & astore$recsiz=="Normal",], aes(y=stage, x=nn, fill=as.character(prelam), group = interaction(prelam, stage))) +
+  geom_boxplot(outliers = FALSE) +
+  scale_x_log10(labels = ~ format(.x, scientific = FALSE)) +
+  xlab(expression("Outplant area per 100 m"^2*" (log axis)")) +
+  coord_cartesian(xlim = c(0.1, 1000)) +
+  scale_fill_jco()+
+  # xlab("Outplants per 1000 individuals") +
+  ylab("")  + 
+  # geom_text(inherit.aes=FALSE, aes(x=0.001, y=3.3, label="A"), size=5) + 
+  theme_linedraw() +
+  theme(legend.position = "inside", legend.position.inside = c(0.25, 0.65)) +
+  guides(fill=guide_legend(title="Starting population λ", reverse = TRUE)) + 
+  labs(title="B. Supplemental approach")
+p2
+
+
+p1 + p2 + plot_layout(ncol=2, axis_titles="collect_x")
+
+ggsave("figs/figureSprelam.png", width = 10, height = 5)
+
+
+```
+
+
+# SUMMARIES relative to population sizes. 
 
 ```{r}
 
@@ -450,7 +582,7 @@ store_out <- data.frame()
 
 for (stage in c("Recruit", "Juvenile", "Adult")) {
   for (sp in spp) {
-    temp_nn <- astore$nn[astore$species==sp & astore$lam==1.05 & astore$stage==stage]
+    temp_nn <- astore$nn[astore$species==sp & astore$lam==1.05 & astore$stage==stage & astore$recsiz=="Normal"]
     gf <- astore$growth_form[astore$species==sp][1]
     store_out <- rbind(store_out, data.frame(species=sp, gf=gf, stage=stage, n=n, outplants=n*temp_nn/1000))
   }
@@ -529,7 +661,7 @@ store_prop <- data.frame()
 
 for (sp in spp) {
 
-  eg <- mstore[mstore$species==sp & mstore$lam=="1.05",]
+  eg <- mstore[mstore$species==sp & mstore$lam=="1.05" & mstore$recsiz=="Normal",]
 
   mat <- matrix(c(eg$current[1], eg$current[4], eg$current[7],
                 eg$current[2], eg$current[5], eg$current[8],
@@ -561,7 +693,7 @@ m2 <- ggplot(store_prop[store_prop$poss==1,], aes(x=prop, y=change_adu, color =s
   scale_colour_viridis_d(option='turbo') +
   xlim(0, 1) + 
   xlab("") +
-  ylab("Transition probability change for 5% increase") +
+  ylab("Parameter change for 5% increase") +
   annotate("text", x=0.8, y=2.6, label = "Porites astreoides", angle=0, fontface = "italic", size=3) +
   # annotate("text", x=0.8, y=2.6, label = "Acropora cervicornis", angle=0, fontface = "italic", size=3) +
   theme_bw() +
@@ -578,7 +710,7 @@ m3 <- ggplot(store_prop[store_prop$tposs,], aes(x=prop, y=change_rec, color=spec
   scale_colour_viridis_d(option='turbo') + 
   xlim(0, 1) + 
   xlab("Proportion of total population affected") +
-  ylab("Transition probability change for 5% increase") +
+  ylab("Parameter change for 5% increase") +
   # annotate("text", x=0.9, y=20, label = "Lower\nGHGs", angle=0) +
   # annotate("text", x=0.25, y=20, label = "Large\nMPAs", angle=0) +
   # annotate("text", x=0.1, y=20, label = "Assisted\nmigration", angle=0) +
