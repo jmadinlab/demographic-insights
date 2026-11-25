@@ -1,0 +1,56 @@
+species,name,growth_form,region,rec_juv,juv_adu,paper,maturity,paper2
+Acropora cervicornis,Acropora cervicornis,Arborescent,Caribbean,100,1600,Mercado-Molina et al. 2015,1600,
+Acropora cervicornis 2,Acropora cervicornis,Arborescent,Caribbean,100,1600,Mercado-Molina et al. 2015,1600,
+Agaricia agaricites,Agaricia agaricites,Laminar,Caribbean,20,100,Hughes & Tanner 2000,120,
+Agaricia agaricites 2,Agaricia agaricites,Laminar,Caribbean,20,100,Hughes & Tanner 2000,120,
+Helioseris cucullata,Helioseris cucullata,Laminar,Caribbean,20,100,Hughes & Tanner 2000,150,Unknown
+Helioseris cucullata 2,Helioseris cucullata,Laminar,Caribbean,20,100,Hughes & Tanner 2000,150,Unknown
+Montastraea annularis,Orbicella annularis,Massive,Caribbean,50,200,Hughes & Tanner 2000,83,
+Orbicella annularis,Orbicella annularis,Massive,Caribbean,50,150,Soto-Santiago et al. 2017,83,
+Orbicella annularis 2,Orbicella annularis,Massive,Caribbean,50,150,Soto-Santiago et al. 2017,83,
+Orbicella annularis 3,Orbicella annularis,Massive,Caribbean,50,150,Soto-Santiago et al. 2017,83,
+Porites astreoides,Porites astreoides,Massive,Caribbean,50,150,Soto-Santiago et al. 2017,250,"CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Acropora cf. digitifera,Acropora cf. digitifera,Digitate,GBR,100,500,Madin et al. 2023,500,Alvarez-Noriega et al. 2016
+Acropora cytherea,Acropora cytherea,Tabular,GBR,500,2000,Madin et al. 2023,2000,Alvarez-Noriega et al. 2016
+Acropora humilis,Acropora humilis,Digitate,GBR,80,200,Madin et al. 2023,80,Alvarez-Noriega et al. 2016
+Acropora hyacinthus,Acropora hyacinthus,Tabular,GBR,200,1000,Madin et al. 2023,1000,Alvarez-Noriega et al. 2016
+Acropora intermedia,Acropora intermedia,Arborescent,GBR,200,1000,Madin et al. 2023,1000,Alvarez-Noriega et al. 2016
+Acropora millepora,Acropora millepora,Corymbose,GBR,100,300,Madin et al. 2023,100,Alvarez-Noriega et al. 2016
+Acropora nasuta,Acropora nasuta,Corymbose,GBR,100,300,Madin et al. 2023,100,Alvarez-Noriega et al. 2016
+Acropora robusta,Acropora robusta,Arborescent,GBR,200,500,Madin et al. 2023,500,Alvarez-Noriega et al. 2016
+Acropora spathulata,Acropora spathulata,Corymbose,GBR,100,300,Madin et al. 2023,100,Alvarez-Noriega et al. 2016
+Goniastrea pectinata,Goniastrea pectinata,Massive,GBR,20,70,Madin et al. 2023,40,Alvarez-Noriega et al. 2016
+Goniastrea retiformis,Goniastrea retiformis,Massive,GBR,30,100,Madin et al. 2023,50,Alvarez-Noriega et al. 2016
+Montipora capitata,Montipora capitata,Laminar,Hawaii,50,120,Following: Hughes & Tanner 2000,120,
+Montipora patula,Montipora patula,Laminar,Hawaii,50,120,Following: Hughes & Tanner 2000,120,
+Pocillopora meandrina,Pocillopora meandrina,Corymbose,Hawaii,50,200,Following: Madin et al. 2023,80,Following: Alvarez-Noriega et al. 2016
+Porites lichen,Porites lichen,Massive,Hawaii,50,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lobata,Porites lobata,Massive,Hawaii,50,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lutea,Porites lutea,Massive,Hawaii,50,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Acropora cf. digitifera_20,Acropora cf. digitifera_5cm,Digitate,GBR,20,500,Madin et al. 2023,500,Alvarez-Noriega et al. 2016
+Goniastrea pectinata_20,Goniastrea pectinata_5cm,Massive,GBR,20,70,Madin et al. 2023,40,Alvarez-Noriega et al. 2016
+Goniastrea retiformis_20,Goniastrea retiformis_5cm,Massive,GBR,20,100,Madin et al. 2023,50,Alvarez-Noriega et al. 2016
+Montipora capitata_20,Montipora capitata_5cm,Laminar,Hawaii,20,120,Following: Hughes & Tanner 2000,120,
+Montipora patula_20,Montipora patula_5cm,Laminar,Hawaii,20,120,Following: Hughes & Tanner 2000,120,
+Pocillopora meandrina_20,Pocillopora meandrina_5cm,Corymbose,Hawaii,20,200,Following: Madin et al. 2023,80,Following: Alvarez-Noriega et al. 2016
+Porites lichen_20,Porites lichen_5cm,Massive,Hawaii,20,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lobata_20,Porites lobata_5cm,Massive,Hawaii,20,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lutea_20,Porites lutea_5cm,Massive,Hawaii,20,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Acropora cf. digitifera_10,Acropora cf. digitifera_5cm,Digitate,GBR,10,500,Madin et al. 2023,500,Alvarez-Noriega et al. 2016
+Goniastrea pectinata_10,Goniastrea pectinata_5cm,Massive,GBR,10,70,Madin et al. 2023,40,Alvarez-Noriega et al. 2016
+Goniastrea retiformis_10,Goniastrea retiformis_5cm,Massive,GBR,10,100,Madin et al. 2023,50,Alvarez-Noriega et al. 2016
+Montipora capitata_10,Montipora capitata_5cm,Laminar,Hawaii,10,120,Following: Hughes & Tanner 2000,120,
+Montipora patula_10,Montipora patula_5cm,Laminar,Hawaii,10,120,Following: Hughes & Tanner 2000,120,
+Pocillopora meandrina_10,Pocillopora meandrina_5cm,Corymbose,Hawaii,10,200,Following: Madin et al. 2023,80,Following: Alvarez-Noriega et al. 2016
+Porites lichen_10,Porites lichen_5cm,Massive,Hawaii,10,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lobata_10,Porites lobata_5cm,Massive,Hawaii,10,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lutea_10,Porites lutea_5cm,Massive,Hawaii,10,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Acropora cf. digitifera_5,Acropora cf. digitifera_5cm,Digitate,GBR,5,500,Madin et al. 2023,500,Alvarez-Noriega et al. 2016
+Goniastrea pectinata_5,Goniastrea pectinata_5cm,Massive,GBR,5,70,Madin et al. 2023,40,Alvarez-Noriega et al. 2016
+Goniastrea retiformis_5,Goniastrea retiformis_5cm,Massive,GBR,5,100,Madin et al. 2023,50,Alvarez-Noriega et al. 2016
+Montipora capitata_5,Montipora capitata_5cm,Laminar,Hawaii,5,120,Following: Hughes & Tanner 2000,120,
+Montipora patula_5,Montipora patula_5cm,Laminar,Hawaii,5,120,Following: Hughes & Tanner 2000,120,
+Pocillopora meandrina_5,Pocillopora meandrina_5cm,Corymbose,Hawaii,5,200,Following: Madin et al. 2023,80,Following: Alvarez-Noriega et al. 2016
+Porites lichen_5,Porites lichen_5cm,Massive,Hawaii,5,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lobata_5,Porites lobata_5cm,Massive,Hawaii,5,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
+Porites lutea_5,Porites lutea_5cm,Massive,Hawaii,5,150,Following: Soto-Santiago et al. 2017,250,"Following: CHORNESKY, E. A., & PETERS, E. C. (1987)"
